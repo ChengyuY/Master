@@ -1,0 +1,8 @@
+scp -r Rapport.md 3703302@ssh.ufr-info-p6.jussieu.fr:~
+ssh 3703302@ssh.ufr-info-p6.jussieu.fr
+3703302@ssh:~$ mkdir 3703302
+3703302@ssh:~$ mv APS1A 3703302
+3703302@ssh:~$ mv APS2 3703302
+3703302@ssh:~$ mv Rapport.md 3703302
+ssh ppti-14-407-05
+/Infos/lmd/2020/master/ue/MU4IN503-2021fev/3703302

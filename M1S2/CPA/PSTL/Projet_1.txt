@@ -1,0 +1,153 @@
+---第一篇论文---
+#对于顶点u ，我们创建一个 0 向量p 和一个 在u点位置为1 ， 其余位置都为0 的 向量r。
+#alpha 是传播概率 
+
+p = [0 for i in range n]
+r = [1 if i = u else 0 for i in range n]
+
+Push_u(p,r):
+	p[u] = p[u] + alpha * r[u] 
+	tmp = (1 - alpha) * r[u] / 2
+	r[u] = tmp
+	for v connect with u 
+	# 对于每个u连接的其他顶点
+		r[v] = r[v] + tmp / d(u) 
+		# d[u] 是与u连接的顶点的数量
+	return (p , r)
+
+#选择一个点初始化 p ， r。	
+ApproximatePageRank (v, alpha, epsilon):
+	#初始化向量 p r
+	p = [0 for i in range n]
+	r = [1 if i = v else 0 for i in range n]
+	#如果存在 r[i] / d[i] 大于等于 epsilon 对其对应的点进行push直到list为空集。
+	list = [r[i] / d[i] if [r[i] / d[i] >= epsilon  for i in range n]
+	while (list) :
+		找到list的第一个元素对应的点u_i ， 生成对应的 r_i 并进行push ， 然后将其删除
+		push(p,r_i)
+		如果有新的顶点 i 满足 r[i] / d[i] >= epsilon , 将其添加至list队列尾部
+	# 此时 ， 对于所有顶点 i ， 都满足 r[i] / d[i] , 我们得到了满足 定理1 的 向量 p
+	return p
+
+---第二篇论文---
+
+#alpha 是传播概率 ， epsilon 是人为拟定的可容许误差
+#初始化的 向量x 是标准向量(即所有位置都为1) 乘以 1 - alpha 的结果
+#点集 S_v 是所有指向 点v 的点的集合 ， 点集 T_v 是所有被 点v 指向的点的集合
+#点v 的pagerank由 x_v 表示
+
+----算法1 : Topology-driven PageRank
+#主要循环 x_v(k+1) = alpha * ( x_omega(k)/d(T_omega)的和 ) + 1 - alpha , omega属于点集 S_v ， k 为循环的次数。
+
+Topology_driven_PageRank(g : graph , alpha , epsilon) :
+	#初始化向量 x
+	x = [(1 - alpha) for i in range n] # n 为点的个数
+	#进入循环
+	while true :
+		对于所有顶点v	:
+			tmp = x
+			x_v = alpha * ( tmp_omega/d(T_omega)的和 ) + 1 - alpha 
+			# d(T_omega)代表T_omega中的元素个数 , omega 属于 S_v
+		theta[v] = x_v - tmp_v 
+		if theta 中的最大值小于 epsilon 
+			break
+	x = (x / |x|) #|x|代表 x 的模长
+	return x
+	
+---算法2 : Basic Data-driven PageRank
+Data_driven_PageRank(g : graph , alpha , epsilon) :
+	#初始化向量 x
+	x = [(1 - alpha) for i in range n] # n 为点的个数
+	#初始化列表 worklist
+	worklist代表所有点的集合
+	#先push所有点
+	对于worklist中的所有点 v :
+		worklist.push(v)
+	#进入循环
+	while (worklist) :
+		#先去掉队首的点
+		v = worklist.pop()
+		tmp_v = alpha * ( x_omega/d(T_omega)的和 ) + 1 - alpha 
+		# d(T_omega)代表T_omega中的元素个数 , omega 属于 S_v
+		if tmp_v - x_v > epsilon : x_v = tmp
+		#处理T_v
+		对于所有在点集T_v 中的点 omega :
+			if omega not in worklist :
+				worklist.push(omega)
+	#结束循环
+	x = (x / |x|) #|x|代表 x 的模长
+	return x
+
+---算法3 : Pull-Push-based PageRank
+Pull_Push_based_PageRank(g : graph , alpha , epsilon) :
+	#初始化向量 x
+	x = [(1 - alpha) for i in range n] # n 为点的个数
+	#初始化向量 r
+	r = [0 for i in range n]
+	#对每个点进行操作
+	对于所有点 v :
+		对于属于S_v的所有点 omega :
+			r_v = r_v + 1 / d(T_omega)
+		r_v = (1 - alpha) * alpha * r_v
+		
+	#初始化列表 worklist
+	worklist代表所有点的集合
+	对于所有点 v :
+		worklist.push(v)
+	#进入循环
+	while (worklist) :
+		#先去掉队首的点
+		v = worklist.pop()
+		x_v = alpha * ( x[omega]/d(T_omega)的和 ) + 1 - alpha 
+		# d(T_omega)代表T_omega中的元素个数 , omega 属于 S_v
+		对于所有在点集T_v 中的点 omega :
+			r_omega_old = r_omega
+			r_omega = r_omega + r_v * alpha / d(T_v)
+			if r_omega >= epsilon and r_omega_old < epsilon :
+				worklist.push(w)
+		r_v = 0
+	#结束循环
+	x = (x / |x|) #|x|代表 x 的模长
+	return x
+	
+---算法4 : Push-based PageRank
+Push_based_PageRank(g : graph , alpha , epsilon) :
+	#初始化向量 x
+	x = [(1 - alpha) for i in range n] # n 为点的个数
+	#初始化向量 r
+	r = [0 for i in range n]
+	#对每个点进行操作
+	对于所有点 v :
+		对于属于S_v的所有点 omega :
+			r_v = r_v + 1 / d(T_omega)
+		r_v = (1 - alpha) * alpha * r_vx
+		
+	#初始化列表 worklist
+	worklist代表所有点的集合
+	对于所有点 v :
+		worklist.push(v)
+	#进入循环
+	while (worklist) :
+		#先去掉队首的点
+		v = worklist.pop()
+		x_v_new = x_v + r_v
+		对于所有在点集T_v 中的点 omega :
+			r_omega_old = r_omega
+			r_omega = r_omega + r_v * alpha / d(T_v)
+			if r_omega >= epsilon and r_omega_old < epsilon :
+				worklist.push(w)
+		r_v = 0
+	#结束循环
+	x = (x / |x|) #|x|代表 x 的模长
+	return x
+
+
+
+
+
+
+
+
+
+
+	

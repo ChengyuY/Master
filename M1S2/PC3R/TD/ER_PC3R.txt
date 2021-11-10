@@ -1,0 +1,340 @@
+# define LIMITE 4
+# define NB_INC 4
+
+int compteur = 0;
+
+proctype incrementeur(int id; chan fini; chan obs){
+    int i = 0;
+    int temp;
+    debut:
+        atomic{i = i + 1;
+        temp = compteur;
+        temp = temp + 1;
+        compteur = temp;}
+        obs!id, temp;
+        if
+            :: i < LIMITE -> goto debut
+            :: i >= LIMITE -> goto fin
+        fi
+    fin:
+        fini!id
+}
+
+proctype observateur(chan obs; chan fini){
+    int x, y;
+    int done = 0;
+    debut:
+        do
+        :: obs?(x,y) -> printf("L'incrementeur %d a mis le compteur a %d.\n", x, y)
+        :: fini?x -> printf("L'incrementeur %d a fini.\n", x); done = done + 1;
+        :: done == NB_INC -> goto fin
+        od
+    fin:
+        printf("Fin du programme.\n")
+        assert compteur == LIMITE * NB_INC
+}
+
+init{
+    int n, j;
+    int lim = NB_INC;
+    chan obs = [0] of {int, int};
+    chan fini = [0] of {int};
+    for(j:1..lim){
+        run incrementeur(j, fini, obs)
+    }
+    run observateur(obs, fini)
+}
+
+
+
+
+
+
+
+#define MAX 5
+#define PMAX 5
+#define CMAX 4
+#define TAILLE 3
+
+mtype = {p, s, d, r};
+
+proctype producteur(chan min; int id; chan obs; chan fini; chan ack){
+    int n = 1
+    int k
+    debut:
+        if
+        ::obs!p; ack?k; min!n; printf("Prod %d produit %d.\n", id, n);
+            if
+            :: n < MAX -> n = n + 1; goto debut
+            :: n >= MAX -> goto fin
+            fi
+        ::min!n; printf("Prod %d produit secretement %d.\n", id, n);
+            if
+            :: n < MAX -> n = n + 1; goto debut
+            :: n >= MAX -> goto fin
+            fi
+        fi
+    fin:
+        fini!0
+}
+
+proctype gestionnaire(chan min; chan mout; chan obs; chan ack; chan fini){
+    int tableau[TAILLE]
+    int courant = 0
+    int k, i, l
+    boucle:
+        do
+        :: courant < TAILLE ->
+            min?k;
+            obs!s; ack?l;
+            tableau[courant] = k;
+            printf("Gestionnaire stocke %d en position %d.\n", k, courant)
+            courant = courant + 1;
+            goto boucle
+        :: courant > 0 -> 
+            obs!d; ack?l;
+            mout!tableau[0]
+            printf("Gestionnaire envoie %d.\n", tableau[0])
+            courant = courant - 1
+            for(i:0..(courant-1)){
+                tableau[i]=tableau[i+1]
+            };
+            goto boucle
+        :: fini?k -> goto fin
+        od
+    fin:
+        printf("Mort du gestionnaire.\n")
+}
+
+proctype consommateur(chan mout; int id; chan obs; chan ack; chan fini){
+    int k,l
+    boucle:
+        if
+        :: mout?k ->
+            obs!r; ack?l;
+            printf("Consommateur %d recoit %d.\n", id, k)
+            goto boucle
+        :: fini?k -> goto fin
+        fi
+    fin:
+        printf("Mort du consommateur %d.\n", id)
+}
+
+proctype observateur(chan obs ; chan ack){
+    int produits = 0;
+    int stockes = 0;
+    int recus = 0;
+    mtype m;
+    boucle:
+        assert(produits >= stockes + recus);
+        assert(stockes <= TAILLE);
+        assert(stockes >= 0);
+        obs?m -> if
+            :: m == p -> produits ++;
+            :: m == s -> stockes ++;
+            :: m == d -> stockes --;
+            :: m == r -> recus ++;
+            fi
+        ack!0
+        printf("Observateur: %d; %d; %d\n", produits, stockes, recus)
+        goto boucle
+}
+
+init{
+    int j, k;
+    int cm = CMAX;
+    int pm = PMAX;
+    chan min = [0] of {int}
+    chan mout = [0] of {int}
+    chan obs = [0] of {mtype}
+    chan fini = [0] of {int}
+    chan fini2 = [0] of {int}
+    chan ack = [0] of {int}
+    run observateur(obs, ack)
+    for(j:1..pm){
+        run producteur(min, j, obs, fini, ack)
+    }
+    run gestionnaire(min, mout, obs, ack, fini2)
+    for(j:1..cm){
+        run consommateur(mout, j, obs, ack, fini2)
+    }
+    for(j:1..pm){
+        fini?k
+    }
+    for(j:1..(cm+1)){
+        fini2!0
+    }
+}
+
+
+
+
+
+
+
+
+mtype {ROUGE, VERT};
+mtype{rentre, sort}
+
+proctype observateur(chan obs){
+    mtype evt;
+    int nb_trains_voie = 0;
+    boucle:
+        printf("%d trains sur la voie.", nb_trains_voie)
+        assert(nb_trains_voie <= 1)
+        obs?evt -> if
+            :: evt == rentre; nb_trains_voie ++
+            :: evt == sort; nb_trains_voie --
+        fi
+        goto boucle
+
+}
+
+proctype senseur(chan sens; chan signal){
+    bool b;
+    end:
+        do
+            ::sens?b -> signal!true
+        od
+}
+
+proctype feu(chan swtch; chan change){
+    bool b;
+    mtype couleur;
+
+    end_rouge:
+        couleur = ROUGE;
+        change!couleur;
+    end_attente:
+        swtch?b -> if  
+            :: couleur == ROUGE -> goto end_vert
+            :: couleur == VERT -> goto end_rouge
+            :: couleur == VERT -> goto end_vert
+            fi
+    end_vert:
+        couleur = VERT;
+        change!couleur;
+        goto end_attente;
+}
+
+proctype train(int id; chan obs; chan sensin; chan changefeu; chan sensout){
+    mtype couleur;
+
+    arrivee:
+        printf("Train %d arrive.\n", id)
+        sensin!true -> goto attente
+
+    attente:
+        printf("Train %d attends.\n", id)
+        changefeu?couleur -> if
+            :: couleur == VERT -> goto passe
+            :: couleur == ROUGE -> goto attente
+            fi
+    
+    passe:
+        printf("Train %d passe.\n", id)
+        obs!rentre
+    
+    sortie:
+        obs!sort
+        atomic{
+            printf("Train %d sort.\n", id)
+            sensout!true;
+            goto arrivee
+        }
+}
+
+proctype control(chan in1_signal; chan in2_signal;
+                 chan out1_signal; chan out2_signal;
+                 chan feu1_swtch; chan feu2_swtch) {
+  bool b;
+
+notrain_f1red_f2red:
+  printf("00RR\n")
+  if
+  ::in1_signal?b -> goto train1_in_f1red_f2red
+  ::in2_signal?b -> goto train2_in_f1red_f2red
+  fi
+
+train1_in_f1red_f2red:
+  printf("I0RR\n")
+  if
+  ::in2_signal?b -> goto train1_in_train2_in_f1red_f2red
+  ::feu1_swtch!true -> goto train1_pass_f1green_f2red
+  fi
+
+train1_in_train2_in_f1red_f2red:
+  printf("IIRR\n")
+  if
+  ::true -> feu1_swtch!true -> goto train1_pass_train2_in_f1green_f2red
+  ::true -> feu2_swtch!true -> goto train1_in_train2_pass_f1red_f2green
+  fi
+
+train1_pass_f1green_f2red:
+  printf("P0VR\n")
+  if
+  ::in2_signal?b -> goto train1_pass_train2_in_f1green_f2red
+  ::out1_signal?b -> feu1_swtch!true -> goto notrain_f1red_f2red
+  fi
+
+train1_pass_train2_in_f1green_f2red:
+  printf("PIVR\n")
+  out1_signal?b -> feu1_swtch!true -> goto train2_in_f1red_f2red
+
+train2_in_f1red_f2red:
+    printf("0IRR\n")
+  if
+  ::in1_signal?b -> goto train1_in_train2_in_f1red_f2red
+  ::feu2_swtch!true -> goto train2_pass_f1red_f2green
+  fi
+
+train2_pass_f1red_f2green:
+      printf("0PRV\n")
+  if
+  ::in1_signal?b -> goto train1_in_train2_pass_f1red_f2green
+  ::out2_signal?b -> feu2_swtch!true -> goto notrain_f1red_f2red
+  fi
+
+train1_in_train2_pass_f1red_f2green:
+    printf("IPRV\n")
+  out2_signal?b -> feu2_swtch!true -> goto train1_in_f1red_f2red
+
+}
+
+init {
+  chan in_sense1 = [0] of { bool };
+  chan in_signal1 = [0] of { bool };
+  chan in_sense2 = [0] of { bool };
+  chan in_signal2 = [0] of { bool };
+
+  chan out_sense1 = [0] of { bool };
+  chan out_signal1 = [0] of { bool };
+  chan out_sense2 = [0] of { bool };
+  chan out_signal2 = [0] of { bool };
+
+  chan feu_swtch1 = [0] of { bool };
+  chan feu_change1 = [0] of { mtype };
+  chan feu_swtch2 = [0] of { bool };
+  chan feu_change2 = [0] of { mtype };
+
+  chan obs = [0] of {mtype}
+  atomic {
+    run observateur(obs);
+
+    run senseur(in_sense1, in_signal1);
+    run senseur(in_sense2, in_signal2);
+    run senseur(out_sense1, out_signal1);
+    run senseur(out_sense2, out_signal2);
+
+    run feu(feu_swtch1, feu_change1);
+    run feu(feu_swtch2, feu_change2);
+
+    run train(1, obs, in_sense1, feu_change1, out_sense1);
+    run train(2, obs, in_sense2, feu_change2, out_sense2);
+
+    run control(in_signal1, in_signal2,
+                out_signal1, out_signal2,
+                feu_swtch1, feu_swtch2);
+  }
+
+}

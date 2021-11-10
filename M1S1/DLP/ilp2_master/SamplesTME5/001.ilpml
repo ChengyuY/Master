@@ -1,0 +1,9 @@
+let x = 1 in
+(
+  while x < 10 do
+  (
+    if x < 5 then x = x + 1 
+    else break
+  );
+  print(x)
+)

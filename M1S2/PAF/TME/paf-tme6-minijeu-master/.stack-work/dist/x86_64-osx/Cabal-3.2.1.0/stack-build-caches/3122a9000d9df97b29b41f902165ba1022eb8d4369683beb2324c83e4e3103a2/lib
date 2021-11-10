@@ -1,0 +1,22 @@
+? /Users/yangchengyu/Downloads/PAF/TME/paf-tme6-minijeu-master/.stack-work/dist/x86_64-osx/Cabal-3.2.1.0/build/autogen/Paths_minijeu.hs
+: hash: 5c9715096a873b6fd0508d0531199aa1f501072c8adfd52232704f8773ff666c
+/Users/yangchengyu/Downloads/PAF/TME/paf-tme6-minijeu-master/src/Mouse.hs:
+  hash: 39c6c26d246e0cdfa2dc1c47cb9688206584c47ed894430558aac174e53d0adc
+/Users/yangchengyu/Downloads/PAF/TME/paf-tme6-minijeu-master/src/SpriteMap.hs:
+  hash: dc0d10962099028472ca234496ec7dfdc99fa64f6f3e7da1505b1685b9188206
+/Users/yangchengyu/Downloads/PAF/TME/paf-tme6-minijeu-master/src/Keyboard.hs:
+  hash: 18c878a0d7d421943635cea8a298882b1ccd821f66b0aadf0059adc2a2c7fcf3
+/Users/yangchengyu/Downloads/PAF/TME/paf-tme6-minijeu-master/ChangeLog.md:
+  hash: e59d79eec98a648ef6fa74563560ca4fd1d3d93d93e6588d66daa8a3c624be96
+/Users/yangchengyu/Downloads/PAF/TME/paf-tme6-minijeu-master/minijeu.cabal:
+  hash: 070f9c60cca681eb7531ee10750068fdcc8b1dd180438c6d05845317aff4fe2c
+/Users/yangchengyu/Downloads/PAF/TME/paf-tme6-minijeu-master/src/Sprite.hs:
+  hash: 5cffcaf612a309d398d8cbcd094fa9e66926b7087e3fc3378d2999578e655b22
+/Users/yangchengyu/Downloads/PAF/TME/paf-tme6-minijeu-master/src/TextureMap.hs:
+  hash: a78ebf5f6d72a0acd3e7b5c948242c48911bbe4581b189d4791faf5d09c9c5ff
+/Users/yangchengyu/Downloads/PAF/TME/paf-tme6-minijeu-master/README.md:
+  hash: ba0b3c5b33522c3ba20d5ca05f658f06ba4fdcf1b15d523f88e7f795903ace0d
+/Users/yangchengyu/Downloads/PAF/TME/paf-tme6-minijeu-master/package.yaml:
+  hash: 0a8e9cae56e7f3cfdc98c859ed0b62cc65d5f29c5b59146c411710236f7b9a92
+/Users/yangchengyu/Downloads/PAF/TME/paf-tme6-minijeu-master/src/Model.hs:
+  hash: c7e7589ff2e238ef671ecb3566f98fe6295eedfa0a4a6aaa69ddec0da83eb75d

@@ -1,0 +1,205 @@
+-- >>> :info Functor
+-- type Functor :: (* -> *) -> Constraint
+-- class Functor f where
+--   fmap :: (a -> b) -> f a -> f b
+--   (<$) :: a -> f b -> f a
+--   {-# MINIMAL fmap #-}
+
+mapBox :: (a -> b) -> Box a -> Box b
+mapBox g (Box x) = Box (g x)
+
+instance Functor Box where
+  -- fmap :: (a -> b) -> Box a -> Box b
+  fmap = mapBox
+
+---------------------------------------------------------------
+
+instance Semigroup (List a) where
+  (<>) :: List a -> List a -> List a
+  xs <> Nil = xs
+  Nil <> xs = xs
+  (Cons x xs) <> ys = Cons x (xs <> ys)
+
+instance Monoid a => Monoid (List a) where
+  mempty :: List a
+  mempty = Nil
+
+-- >>> Cons 1 (Cons 2 (Cons 3 Nil)) <> (Cons 4 (Cons 5 Nil))
+-- Cons 1 (Cons 2 (Cons 3 (Cons 4 (Cons 5 Nil))))
+
+instance Semigroup a => Semigroup (MyMaybe a) where
+  (<>) :: MyMaybe a -> MyMaybe a -> MyMaybe a
+  x <> NNothing = x
+  NNothing <> x = x
+  JJust v <> JJust w = JJust $ v <> w
+
+instance Monoid a => Monoid (MyMaybe a) where
+  mempty :: MyMaybe a
+  mempty = NNothing
+
+---------------------------------------------------------------
+
+applyMyMaybe :: MyMaybe (a -> b) -> MyMaybe a -> MyMaybe b
+applyMyMaybe (JJust g) (JJust y) = JJust (g y)
+applyMyMaybe _  _ = NNothing
+
+pureMyMaybe :: a -> MyMaybe a
+pureMyMaybe = JJust
+
+applyMyMaybe :: MyMaybe (a -> b) -> MyMaybe a -> MyMaybe b
+applyMyMaybe (JJust g) (JJust y) = JJust (g y)
+applyMyMaybe _  _ = NNothing
+
+instance Applicative MyMaybe where
+  pure = pureMyMaybe
+  (<*>) = applyMyMaybe
+
+-- >>> applyMyMaybe (fmap (+) (JJust 2))  (JJust 40)
+-- JJust 42
+-- >>> (fmap (+) (JJust 2)) <*>  (JJust 40)
+-- JJust 42
+-- >>> (+) <$> (JJust 2) <*> (JJust 40)
+-- JJust 42
+以上三种表达方式等价
+
+instance (Monoid e) => Applicative (Paire e) where
+    pure x = Paire mempty x
+    (<*>) (Paire e1 f) (Paire e2 x) = Paire (e1 <> e2) (f x)
+
+-- >>> (+1) <$> (Paire "x" 41)
+-- Paire "x" 42
+-- >>>  (+) <$> (Paire "Hello" 39) <*> (Paire " world!" 3)
+-- Paire "Hello world!" 42
+
+
+-- >>>  (+) <$> [1, 2, 3] <*> [10, 20, 30]
+-- [11,21,31,12,22,32,13,23,33]
+-- >>> [(+), (*)] <*> [1, 2, 3] <*> [10, 20, 30]
+-- [11,21,31,12,22,32,13,23,33,10,20,30,20,40,60,30,60,90]
+-- >>> (+) <$> [1, 2, 3] <*> [10]
+-- [11,12,13]
+
+---------------------------------------------------------------
+
+-- class Functor f => Applicative f where
+--   pure :: a -> f a
+--   (<*>) :: f (a -> b) -> f a -> f b
+
+newtype Lecteur e a = Lecteur {runLecteur :: e -> a}
+
+instance Functor (Lecteur e) where
+    fmap g (Lecteur f) = Lecteur (g . f)
+
+instance Applicative (Lecteur e) where
+    -- pure x = Lecteur (\_ -> x)
+    pure = Lecteur . const
+    (<*>) (Lecteur f) (Lecteur g) = Lecteur (\x -> f x (g x))
+
+r2 :: Lecteur Int Int
+r2 = (+) <$> Lecteur (+3) <*> Lecteur (*100)
+-- <Lecteur Int (Int -> Int)> | <Lecteur Int Int>
+
+-- >>> (runLecteur r2) 5
+-- 508
+-- >>> (runLecteur r2) 10
+-- 1013
+
+---------------------------------------------------------------
+
+-- type Monad :: (* -> *) -> Constraint
+-- class Applicative m => Monad m where
+--   (>>=) :: m a -> (a -> m b) -> m b
+
+-- >>> :t (>>=)
+-- (>>=)        :: Monad m => m     a -> (a -> m     b) -> m     b
+-- combine      :: Maybe a -> (a -> Maybe b) -> Maybe b
+-- listCombine  :: [a]-> (a ->      [b])->      [b]
+
+data MMaybe a = NNothing | JJust a
+  deriving Show
+
+instance Functor MMaybe where
+  fmap _ NNothing = NNothing
+  fmap g (JJust x) = JJust (g x)
+
+instance Applicative MMaybe where
+  pure = JJust
+  (JJust g) <*> (JJust x) = JJust (g x)
+  _ <*> _ = NNothing
+
+
+combineMMaybe :: MMaybe a -> (a -> MMaybe b) -> MMaybe b
+combineMMaybe NNothing _ = NNothing
+combineMMaybe (JJust x) f = f x
+
+instance Monad MMaybe where
+  -- (>>=) : MMaybe a -> (a -> MMaybe b) -> MMaybe b
+  (>>=) = combineMMaybe
+  
+-- >>> (JJust 42) >>= (\x -> JJust (x+1))
+-- JJust 43
+
+-- >>> (JJust 42) >>= (\x -> JJust (x+1) >>= (\y -> JJust (even y)))
+-- JJust False
+
+-- >>> (JJust 42) >>= (\x -> JJust (x+2) >>= (\y -> JJust (even y)))
+-- JJust True
+
+-- >>> (JJust 42) >>= (\x -> NNothing >>= (\y -> JJust (even y)))
+-- NNothing
+
+---------------------------------------------------------------
+
+fetchId :: String -> Maybe StudentId
+fetchId login = Map.lookup login loginsDB
+
+fetchEmail :: StudentId -> Maybe Email
+fetchEmail id = Map.lookup id emailsDB
+
+emailFromLoginV2 :: String -> Maybe Email
+emailFromLoginV2 login = (fetchId login) `combine` fetchEmail
+
+emailFromLoginV3 :: String -> Maybe Email
+emailFromLoginV3 login = (fetchId login) >>= fetchEmail
+
+emailFromLoginV4 :: String -> Maybe Email
+emailFromLoginV4 login = do
+  id <- fetchId login
+  fetchEmail id
+
+emailFromLoginV5 :: String -> Maybe Email
+emailFromLoginV5 = fetchEmail <=< fetchId
+
+emailFromLoginV6 :: String -> Maybe Email
+emailFromLoginV6 = fetchId >=> fetchEmail
+
+---------------------------------------------------------------
+
+-- >>> (finRange 1 5) `listCombine` (\x -> ['A', 'B'] `listCombine` (\y -> [(x, y)]))
+-- [(1,'A'),(1,'B'),(2,'A'),(2,'B'),(3,'A'),(3,'B'),(4,'A'),(4,'B')]
+
+-- >>> [(x,y) | x <- (finRange 1 5), y <- ['A', 'B']]
+-- [(1,'A'),(1,'B'),(2,'A'),(2,'B'),(3,'A'),(3,'B'),(4,'A'),(4,'B')]
+
+-- >>> (finRange 1 5) >>= (\x -> ['A', 'B'] >>= (\y -> [(x, y)]))
+-- [(1,'A'),(1,'B'),(2,'A'),(2,'B'),(3,'A'),(3,'B'),(4,'A'),(4,'B')]
+
+---------------------------------------------------------------
+
+-- >>> :t (.)
+-- (.) :: (b -> c) -> (a -> b) -> a -> c
+
+-- >>> :t (<=<)
+-- (<=<) :: Monad m => (b -> m c) -> (a -> m b) -> a -> m c
+
+-- >>> :t (>=>)
+-- (>=>) :: Monad m => (a -> m b) -> (b -> m c) -> a -> m c
+
+Lois d'identite :
+
+ (1) pure >=> f = f
+ (2) f >=> pure = f
+
+Loi d'associativite pour la composition (>=>) :
+
+ (3) (f >=> g) >=> h  =   f >=> (g >=> h)

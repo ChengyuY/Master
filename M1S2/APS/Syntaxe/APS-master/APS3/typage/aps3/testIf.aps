@@ -1,0 +1,6 @@
+[
+    IF true
+      [ RETURN 42 ]
+      [ ECHO 5 ]
+  
+]

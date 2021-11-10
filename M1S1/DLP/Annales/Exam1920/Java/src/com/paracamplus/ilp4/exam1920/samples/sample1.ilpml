@@ -1,0 +1,17 @@
+class Iterator {
+  var cur, max;
+  method next() (
+    if self.cur <= self.max then (self.cur = self.cur + 1; self.cur - 1)
+    else false
+  );
+}
+
+class Range {
+  var low, high;
+  method iterator() ( new Iterator(self.low, self.high) );
+}
+
+let x = new Range(10,15) in (
+   for i in x do ( print(i); print("/") );
+   for j in x do ( print(j); print("!") )
+)

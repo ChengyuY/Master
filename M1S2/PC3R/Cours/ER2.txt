@@ -1,0 +1,515 @@
+前端服务例子
+import {URL} from '../_constants/config';
+import {handleResponse} from '../_utils/ErrorResponseHandler';
+import {authenticationService} from './authentication.service';
+
+export const articleService = {
+    getArticles,
+    getSpecifiedArticles
+}
+
+function getArticles(){
+    const currentUser = authenticationService.currentUserValue;
+    const id_user = currentUser.id_user;
+
+    const url = `${URL}/articles`+"?id_user="+id_user;
+    const token = localStorage.getItem('token');
+    const request = {
+        method: 'GET',
+        headers: {'Content-Type':'application/x-www-form-urlencoded',
+                  'Authorization':token},
+    };
+
+    return fetch(url, request).then(handleResponse);
+}
+
+function getSpecifiedArticles(){
+    const url = `${URL}/specified-articles`
+    const request = {
+        method: 'GET',
+        headers: {'Content-Type':'application/x-www-form-urlencoded'}
+    };
+
+    return fetch(url, request).then(handleResponse);
+}
+
+---------------------------------------------------------------
+
+前端网页例子
+function TabPanel(props) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`scrollable-force-tabpanel-${index}`}
+      aria-labelledby={`scrollable-force-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Container>
+          <Box p={3}>
+            {children}
+          </Box>
+        </Container>
+      )}
+    </div>
+  );
+}
+
+function a11yProps(index) {
+  return {
+    id: `scrollable-force-tab-${index}`,
+    'aria-controls': `scrollable-force-tabpanel-${index}`,
+  };
+}
+
+const useStyles = makeStyles((theme) => ({
+  grow: {
+    flexGrow: 1,
+  },
+  menuButton: {
+    marginRight: theme.spacing(2),
+  },
+  title: {
+    display: 'none',
+    [theme.breakpoints.up('sm')]: {
+      display: 'block',
+    },
+  },
+  sectionDesktop: {
+    display: 'none',
+    [theme.breakpoints.up('md')]: {
+      display: 'flex',
+    },
+  },
+}));
+
+export default function HomePage(props) {
+  const classes = useStyles();
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const isMenuOpen = Boolean(anchorEl);
+  const [value, setValue] = React.useState(0);
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [articles, setArticles] = useState([]);
+  const currentUser = authenticationService.currentUserValue;
+  const { t, i18n } = useTranslation();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      var getSubscriptions = await subscriptionService.getSubscriptions();
+      var getArticles = await articleService.getArticles();
+      setSubscriptions(getSubscriptions);
+      setArticles(getArticles);
+    };
+
+    fetchData();
+  }, [])
+
+  function logout() {
+    authenticationService.logout();
+    props.history.push("/");
+  }
+
+  const handleChange = (event, newValue) => {
+    setValue(newValue);
+  };
+
+
+  const handleProfileMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const menuId = 'primary-search-account-menu';
+  const renderMenu = (
+    <Menu
+      anchorEl={anchorEl}
+      anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      id={menuId}
+      keepMounted
+      transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+      open={isMenuOpen}
+      onClose={handleMenuClose}
+    >
+      <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
+      <MenuItem onClick={handleMenuClose}>My account</MenuItem>
+    </Menu>
+  );
+  return (
+    <div className={classes.grow}>
+      <AppBar position="static" color="default">
+        <Toolbar>
+
+          <Typography className={classes.title} variant="h6" noWrap>
+            News
+          </Typography>
+          <Tabs
+            value={value}
+            onChange={handleChange}
+            variant="scrollable"
+            scrollButtons="on"
+            indicatorColor="primary"
+            textColor="primary"
+            aria-label="scrollable force tabs example"
+          >
+            {subscriptions && subscriptions.length
+              ?
+              subscriptions.map((category, i) => (
+                <Tab key={i} label={category.name_category}  {...a11yProps(i)} />
+              ))
+              : null
+            }
+            <Tooltip title={t('add-category')} aria-label="add">
+              <IconButton aria-label="add categories" color="inherit" onClick={() => props.history.push('/subscription')}> 
+                <PlaylistAddIcon/>
+              </IconButton>
+            </Tooltip>
+          </Tabs>
+          <div className={classes.grow} />
+          <div className={classes.sectionDesktop}>
+            <IconButton aria-label="user name" color="inherit">
+              <Typography>
+                {t('welcome')+", "+currentUser.name}
+              </Typography>
+            </IconButton>
+            <Tooltip title={t('log-out')} aria-label="log out">
+              <IconButton aria-label="log out" color="inherit" onClick={() => logout()}>
+                <ExitToAppIcon />
+              </IconButton>
+            </Tooltip>
+          </div>
+        </Toolbar>
+      </AppBar>
+      {renderMenu}
+      <Container>
+        {subscriptions && subscriptions.length
+          ?
+          subscriptions.map((category, i) => {
+            const news = articles.filter((article, index) => (
+              article.category.name_category === category.name_category
+            ));
+            return(
+              <TabPanel key={i} value={value} index={i}> 
+                {news.map((article, index) => (
+                  <ArticleCard key={index} article={article} ></ArticleCard>
+                ))}
+              </TabPanel>
+            );
+          })
+          : <div></div>
+        }
+      </Container>
+    </div>
+  );
+}
+
+---------------------------------------------------------------
+
+前段路径例子
+ReactDOM.render(
+  <React.StrictMode>
+    <Suspense fallback="loading">
+    <BrowserRouter>
+      <Switch>
+        <Route exact path = '/' component={IntroPage}/>
+        <PrivateRoute path ='/home' component={HomePage}/>
+        <Route path='/login' component={LoginPage} />
+        <Route path='/register' component={RegisterPage}/>
+        <Route path='/try' component={HomePageTry} />
+        <PrivateRoute path='/subscription' component={SubscriptionPage}/>
+      </Switch>
+    </BrowserRouter>
+    </Suspense>
+    
+  </React.StrictMode>,
+  document.getElementById('root')
+);
+serviceWorker.unregister();
+
+---------------------------------------------------------------
+
+服务器
+包括user, article, authentication, subscription
+每个servlet都有
+
+-controller : doPost, doGet
+    添加订阅
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String id_user = req.getPathInfo().replaceFirst("/", "");
+        userService.find(id_user, resp);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        List<SubscriptionDTO> subscriptionDTOs = new ArrayList<>();
+        String id_user = req.getParameter("id_user");
+        for(int i = 1; i <= 20; i++){
+            String id = req.getParameter("c" + i);
+            if (id != null){
+                int id_category = Integer.parseInt(id);
+                SubscriptionDTO dto = new SubscriptionDTO(id_category);
+                subscriptionDTOs.add(dto);
+            }
+        }
+        subscriptionService.saveSubscriptions(id_user, subscriptionDTOs, resp);
+    }
+
+-DTO : 对应格式
+    用户名称，密码格式，邮箱是否符合
+    @NotBlank(message = "The name cannot be blank")
+    @Size(min = 2, max = 16, message = "The name must be between 2 and 16 characters")
+    private String name;
+
+    @NotBlank(message = "The password must not be blank")
+    @Pattern(regexp = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$",
+            message = "The password must be at least 8 characters long and contain at least an upper case, a number and a special symbol")
+    private String password;
+
+    @NotBlank(message = "Please provide a valid email address")
+    @Email(message = "Please provide a valid email address")
+    private String email;
+
+    public User toUser(){
+        return User.builder()
+                .email(this.email)
+                .password(this.password)
+                .name(this.name)
+                .build();
+    }
+
+-entite : 对象内容
+    订阅
+    @DecimalMin("1")
+    @DecimalMax("20")
+    private int id_category;
+
+-exception : 异常
+    邮箱已存在
+    public EmailAlreadyExistsException(Map<String, Object> data) {
+        super(ErrorCode.EMAIL_ALREADY_EXISTS, data);
+    }
+
+-repository : factory， 对应的操作(可能会连接库)
+    连接API
+    private final static MongoDatabase db = getMongoDataBase();
+
+    public List<Article> findArticlesByCategory(Category category){
+        List<Article> articles = new ArrayList<>();
+        MongoCollection<Article> collection = db.getCollection("articles", Article.class);
+        FindIterable<Article> iterable = collection.find(eq("category", category));
+        MongoCursor<Article> cursor = iterable.iterator();
+        cursor.forEachRemaining(articles::add);
+        return articles;
+    }
+
+    public List<Article> findArticlesByIdCategory(int id_category){
+        List<Article> articles = new ArrayList<>();
+        MongoCollection<Article> collection = db.getCollection("articles", Article.class);
+        FindIterable<Article> iterable = collection.find(eq("category.id_category", id_category));
+        MongoCursor<Article> cursor = iterable.iterator();
+        cursor.forEachRemaining(articles::add);
+        return articles;
+    }
+    -----------------------------
+    对用户方法
+    SessionFactory sessionFactory;
+
+    public UserRepository() {
+        this.sessionFactory = HibernateUtil.getSessionFactory();
+    }
+
+    public void save(User user){
+        Session session = sessionFactory.openSession();
+        session.beginTransaction();
+        String id = (String) session.save(user);
+        session.getTransaction().commit();
+        session.close();
+        //return id;
+    }
+
+    public void update(User user){
+        Session session = sessionFactory.openSession();
+        session.beginTransaction();
+        session.update(user);
+        session.getTransaction().commit();
+        session.close();
+    }
+
+    public Optional<User> getUserByEmail(String email){
+        Session session = sessionFactory.openSession();
+        session.beginTransaction();
+        Query query = session.createQuery("from User u where u.email = ?1");
+        query.setParameter(1, email);
+        User user = (User) query.uniqueResult();
+        session.close();
+        return Optional.ofNullable(user);
+    }
+
+    public Optional<User> getUserById(String id){
+        Session session = sessionFactory.openSession();
+        session.beginTransaction();
+        User user = (User) session.get(User.class, id);
+        session.close();
+        return Optional.ofNullable(user);
+    }
+
+-service : 加工reponse
+    验证登陆账号是否有效
+    public void authenticate(LoginRequestDTO loginRequestDTO, HttpServletResponse resp) throws IOException{
+        PrintWriter out = resp.getWriter();
+        try{
+            User user = checkCredentials(loginRequestDTO.getEmail(), loginRequestDTO.getPassword());
+            resp.setStatus(HttpServletResponse.SC_OK);
+            String token = createToken(user.getId_user(), user.getEmail());
+            resp.setHeader(TOKEN_HEADER, token);
+            out.println(mapper.writeValueAsString(user));
+        }catch (CredentialsInvalidException ex){
+            handleException(ex, "/authentication", "User authenticate exception", resp);
+        }
+    }
+
+    private User checkCredentials(String email, String password){
+        User user = userRepository.getUserByEmail(email).orElseThrow(
+                () -> new CredentialsInvalidException(ImmutableMap.of("email", email, "password", password))
+        );
+        boolean correct = passwordEncryptor.checkPassword(password, user.getPassword());
+        if(!correct){
+            throw new CredentialsInvalidException(ImmutableMap.of("email", email, "password", password));
+        }else {
+            return user;
+        }
+    }
+    -----------------------------
+    分类
+    private final CategoryRepository categoryRepository;
+    private final ObjectMapper mapper;
+
+    public CategoryService() {
+        this.categoryRepository = new CategoryRepository();
+        this.mapper = new ObjectMapper();
+    }
+
+    public void findAll(HttpServletResponse resp) throws IOException {
+        PrintWriter out = resp.getWriter();
+        List<Category> categories = categoryRepository.findAll();
+        resp.setStatus(HttpServletResponse.SC_OK);
+        out.println(mapper.writeValueAsString(categories));
+    }
+    -----------------------------
+    订阅
+    private final SubscriptionRepository subscriptionRepository;
+    private final CategoryRepository categoryRepository;
+    private final UserRepository userRepository;
+    private final ObjectMapper mapper;
+
+    public SubscriptionService() {
+        this.subscriptionRepository = new SubscriptionRepository();
+        this.categoryRepository = new CategoryRepository();
+        this.userRepository = new UserRepository();
+        this.mapper = new ObjectMapper();
+    }
+
+    public void saveSubscriptions(String id_user, List<SubscriptionDTO> subscriptionDTOs, HttpServletResponse resp) throws IOException {
+        PrintWriter out = resp.getWriter();
+        User user = userRepository.getUserById(id_user).orElseThrow(
+                () -> new IDNotExistsException(ImmutableMap.of("id_user", id_user))
+        );
+        List<Category> subscriptions = new ArrayList<>();
+        for(SubscriptionDTO subscriptionDTO : subscriptionDTOs){
+            try{
+                validate(subscriptionDTO);
+                int id_category = subscriptionDTO.getId_category();
+                Category category = categoryRepository.findCategoryById(id_category).orElseThrow(
+                        () -> new IDNotExistsException(ImmutableMap.of("id_category", id_category))
+                );
+                subscriptions.add(category);
+                resp.setStatus(HttpServletResponse.SC_CREATED);
+            } catch (MethodArgumentInvalidException e) {
+                handleException(e, "/subscriptions", "Subscription creating exception", resp);
+            } catch (IDNotExistsException ex){
+                handleException(ex, "/subscriptions", "User/Category ID not found exception", resp);
+            }
+        }
+        user.setSubscriptions(subscriptions);
+        userRepository.update(user);
+        out.println(mapper.writeValueAsString(user));
+    }
+    -----------------------------
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+      String login = request.getParameter("login");
+      if(login != null) {
+      Optional<Utilisateur> ores = base.trouveUtilisateur(login);
+      response.setContentType("application/json");
+      System.out.println("Recherche par login: "+ login);
+      if(ores.isPresent()) {
+        System.out.println("R�sultat: " + ores.get().toString());
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(gson.toJson(ores.get()));
+      } else {response.getWriter().write(gson.toJson(null));}}
+      else {System.out.println("Pas de login");}
+    }
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+      String login = request.getParameter("login");
+      String mdp = request.getParameter("mdp");
+      if(login != null && mdp != null) {
+      Optional<Utilisateur> ores = base.trouveUtilisateur(login);
+      response.setContentType("application/json");
+      System.out.println("Authentification par login: "+ login + " mdp: " + mdp);
+      if(ores.isPresent()) {
+        if(mdp.equals(ores.get().mdp)) 
+          {response.getWriter().write(gson.toJson(new AuthReponse("ok", login)));
+          System.out.println("R�ussie.");
+          } else {
+          response.getWriter().write(gson.toJson(new AuthReponse("mdp", login)));
+          System.out.println("Mauvais Mdp.");}
+        } else {
+        response.getWriter().write(gson.toJson(new AuthReponse("login", login)));
+        System.out.println("Mauvais login");}
+      } else {System.out.println("Pas de login et/ou mdp");}		
+    }
+    
+-- 过滤器
+    public class AuthenticationFilter implements Filter {
+        @Override
+        public void init(FilterConfig filterConfig) throws ServletException {
+            log.info(filterConfig.getFilterName() + " init ");
+        }
+
+        @Override
+        public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+            HttpServletRequest req = (HttpServletRequest) request;
+            HttpServletResponse resp = (HttpServletResponse) response;
+            String token = req.getHeader(TOKEN_HEADER);
+            try{
+                if(token == null || !token.startsWith(Constants.TOKEN_PREFIX)){
+                    throw new TokenInvalidException(ImmutableMap.of("Authorization", "token-beginning-with-Bearer"));
+                }else {
+                    String newToken = validateAuthentication(token);
+                    resp.setHeader(TOKEN_HEADER, newToken);
+                }
+                chain.doFilter(req, resp);
+            }catch (TokenInvalidException e){
+                handleException(e, req.getRequestURI(), "User authenticate exception", resp);
+            }
+        }
+        @Override
+        public void destroy() {
+        }
+        private String validateAuthentication(String authorization){
+            //remove the prefix "Bearer " of token
+            String token = authorization.replace(Constants.TOKEN_PREFIX,"");
+            String user_email = null;
+            String user_id = null;
+            try{
+                user_email = JWTTokenUtils.getEmailByToken(token);
+                user_id = JWTTokenUtils.getIdUser(token);
+                if (user_email == null || user_id == null)
+                    throw new TokenInvalidException(ImmutableMap.of("Authorization", authorization));
+                return JWTTokenUtils.createToken(user_id, user_email);
+            }catch ( SignatureException | ExpiredJwtException | MalformedJwtException | IllegalArgumentException e){
+                throw new TokenInvalidException(ImmutableMap.of("Authorization", authorization));
+            }
+        }
+    }

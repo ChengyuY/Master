@@ -1,0 +1,261 @@
+module TD1 where
+
+(==>) :: Bool -> Bool -> Bool
+(==>) True False = False
+(==>) _ _ = True
+
+infixr 1 ==>
+
+-- >>>True ==> False
+-- False
+
+prop_implTrans :: Bool -> Bool -> Bool -> Bool
+prop_implTrans a b c = (a ==> b) && (b==>c) ==> a ==> c
+
+-- >>> prop_implTrans True True True
+-- True
+
+-- >>> prop_implTrans True True False
+-- True
+
+
+
+--1.3
+somme :: Integer -> Integer 
+somme 0 = 0
+somme n = n + somme (n - 1)
+
+-- >>> sum 100
+-- >>> 5050
+
+prop_sommeCroise :: Integer -> Integer -> Bool
+prop_sommeCroise a b = (a <= b) ==> ((somme a) <= (somme b))
+
+-- >>> prop_sommeCroise 10 100
+-- >>> True
+
+-- >>> prop_sommeCroise 2 2
+-- >>> True
+
+prop_sommeCorrec :: Integer -> Bool
+prop_sommeCorrec n
+	| n < 0 = True
+	| otherwise = ((somme n) == (n * (n + 1)) 'div' 2))
+
+-- >>> prop_sommeCorrec 10
+-- >>> True
+
+data Vide
+
+exnihilo :: Vide -> Integer
+exnihilo _ = 3
+
+aTraversVide :: Vide -> Vide
+aTraversVide x = x 
+
+-- adnihilo :: Integer -> Vide
+-- adnihilo n == ???
+
+data Unite = Un
+idUnite :: Unite -> Unite
+idUnite Un = Un
+
+estUn :: Unite -> Unite
+estUn _ = True
+
+data UniteDeux = AutreUn
+
+U2versU :: UniteDeux -> Unite
+U2versU AutreUn = Un
+
+UversU2 :: Unite -> UniteDeux
+UversU2 Un = AutreUn
+
+-- () :: ()
+
+newtype Name = Name Text
+newtype Age = Age Int
+
+nameValeur :: Name -> Text
+nameValeur Name a -> a
+
+ageValeur :: Age -> Int
+ageValeur Age a -> a
+
+data Personne = Personne Name Age
+
+personneNom :: Personne -> Name
+personneNom (Personne nom _) = nom
+
+personneAge :: Personne -> Age
+personneAge (Personne _ age) = age
+
+anniversaire :: Personne -> Personne
+anniversaire (Personne nom age) = Personne nom (Age (a + 1))
+
+-- >>> anniversaire (Personne (Name Romain) (Age 36)) 
+
+data PersonneInfo = PersonneInfo{prenom, nom :: Name;;
+				age :: Age,
+				login :: Text,
+				naissance :: Int}
+
+--data PersonneInfo = PersonneInfo Name Name Age Text Int
+--prenom :: PersonneInfo -> Name
+--prenom (PersonneInfo pre _ _ _ _) = pre
+
+setLogin :: PersonneInfo -> Text -> PersonneInfo
+setLogin pers logg = pers {login = logg}
+
+setLoginDeux :: PersonneInfo -> Text -> PersonneInfo
+setLoginDeux (PersonneInfo p n a _ nai) logg = PersonneInfo p n a logg nai
+
+anniversaireMoche :: PersonneInfo -> PersonneInfo
+anniversaireMoche (PersonneInfo p n (Age a) l nai) = PersonneInfo p n (Age (a + 1)) l nai
+
+anniversaireMieux :: PersonneInfo -> PersonneInfo
+anniversaireMieux pers@(PersonneInfo _ _ _ (Age a) _ _) = pers {age = Age (a + 1)}
+
+anniversaireMeilleur :: PersonneInfo -> PersonneInfo
+anniversaireMeilleur pers@(Personne {age = Age a}) = pers {age = Age (a + 1)}
+
+nameAge :: PersonneInfo -> (Name , Age)
+nameAge PersonInfo{nom = n , age = a} = (n , a)
+
+data Paiement = 
+	Cheque Int
+	| Carte Text Text
+	| Espece Int
+
+descriptionPaiement :: Paiement -> Text
+descriptionPaiement (Cheque _) = "par cheque"
+descriptionPaiement (Carte _ _) = "par carte"
+descriptionPaiement (Espece _) = "par espece"
+
+
+
+-- Ex 2
+data Cuve = 
+	Cuve Integer Integer
+	| CuveVide Integer
+	| CuvePleine Integer
+
+prop_cuveInvariant :: Cuve -> Bool
+prop_cuveInvariant (CuveVide cap) = cap >= 0
+prop_cuveInvariant (CuvePleine cap) = cap > 0
+prop_cuveInvariant (Cuve cap cor) = cap > 0 && cour > 0 && cour <= cap
+
+initCuve :: Integer -> Cuve
+initCuve c | c > 0 = Just $ CuveVide c
+	   | otherwise = Nothing
+
+-- >>> init Cuve -3
+-- >>> prop_cuveInvariant (initCuve -3)
+
+--data PeutEtre T = Rien | Juste T
+
+quantite :: Cuve -> Integer
+quantite (Cuve _ cour) = cour
+quantite (CuveVIde c) = 0
+quantite (CuvePleine c) = c
+
+capacite :: Cuve -> Integer
+capacite (Cuve cap _) = cap
+capacite (CuveVIde c) = c
+capacite (CuvePleine c) = c
+
+changeCuve :: Cuve -> Integer -> Cuve
+changeCuve cu q
+    | q == 0 = CuveVide (capacite cu)
+    | q == (capacite cu) = CuvePleine (capacite cu)
+    | otherwise = Cuve (capacite cu) q
+
+remplirCuve :: Cuve -> Integer -> Maybe Cuve
+remplirCuve _ v | v <= 0 = nothing
+remplirCuve cu v =
+    let q = v + (quantite cu) in
+    if q <= (capacite cu) then Just $ changeCuve cu q
+    else Nothing
+
+viderCuve :: Cuve -> Integer -> Maybe Cuve
+viderCuve _ v | v <= 0 = nothing
+viderCuve cu v =
+    let q = (quantite cu) - v in
+    if q >= 0 then Just $ changeCuve cu q
+    else Nothing
+
+prop_viderPost :: Cuve -> Integer -> Bool
+prop_viderPost cu t = case viderCuve cu v of
+                            Nothing -> True
+                            Just cu2 -> quantite cu2 + v == quantite
+
+-- >>> prop_viderPost (Cuve 30 10) 10
+-- >>> prop_viderPost (Cuve 30 10) 5
+-- >>> prop_viderPost (Cuve 30 10) 15
+
+data Tuyau = Tuyau{
+    entree :: Cuve,
+    sortie :: Cuve,
+    porteEnt :: Bool,
+    porteSor :: Bool,
+    contenu :: Cuve
+    } deriving (Show)
+
+prop_tuyauInv1 :: Tuyau -> Bool
+prop_tuyuaInv1 tu = prop_cuveInvariant (entree tu)
+                && prop_cuveInvariant (sortie tu)
+                && prop_cuveInvariant (contenu tu)
+
+prop_tuyauInv2 :: Tuyau -> Bool
+prop_tuyauInv2 tu = porteEnt tu ==> not (porteSor tu)
+
+prop_tuyauInvariant :: Tuyau -> Bool
+prop_tuyauInvariant tu = prop_tuyauInv1 tu && prop_tuyauInv2 tu
+
+--initTuyau (CuveVide -3) (Cuve 30 100) 10
+
+data DoorSide = IN | OUT
+
+switchDoor :: Tuyau -> DoorSide -> Tuayu
+switchDoor tu@Tuyau (Pipe {porteEnt = True} IN = tu {porteENt = False}
+switchDoor tu@Tuyau {entree = cui , porteEnt = false , contenu = cu} IN =
+            let place = (capacite cu) - (quantite cu)
+                volume = min place (quantite cui) in
+                case (remplirCuve cu volume , viderCuve cui volume)
+                of (Just cu2 ,Just cui2) -> tu{entree = cui2 , contenu = cu2 , porteEnt = False}
+                (_,_) -> error "Bug"
+--OUT
+
+switchDoorDeux :: Tuyau -> Doorside -> Maybe Tuayu
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

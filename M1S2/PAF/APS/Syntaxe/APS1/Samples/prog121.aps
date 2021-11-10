@@ -1,0 +1,8 @@
+[
+  VAR b bool;
+  SET b false;
+  WHILE (not b) [
+    SET b true
+  ];
+  ECHO 42
+]

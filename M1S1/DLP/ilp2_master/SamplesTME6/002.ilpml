@@ -1,0 +1,2 @@
+function pow(x,n) ( if n < 1 then 1 else x * pow(x, n-1) );
+pow(10,3)

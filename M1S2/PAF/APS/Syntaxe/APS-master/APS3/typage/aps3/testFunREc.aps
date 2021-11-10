@@ -1,0 +1,10 @@
+[
+  FUN REC f int [x:int] [
+    IF (eq x 42)
+      [ RETURN x ]   
+	  [ RETURN (f (sub x 1)) ]
+      
+  ];    
+  
+  ECHO (f 45)
+]

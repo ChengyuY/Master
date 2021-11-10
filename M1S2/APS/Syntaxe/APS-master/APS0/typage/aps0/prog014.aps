@@ -1,0 +1,6 @@
+[
+  CONST f (int -> int) [x:int] (add x 5);
+  ECHO (f 37);
+  ECHO (f 45);
+  ECHO (f 75)
+]

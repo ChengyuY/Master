@@ -1,0 +1,9 @@
+let i = 1 and j = 0 in(
+	b1: while i < 10 do(
+		i = i + 1;
+		b2: while j < i do(
+			if (i + j >= 9) then continue b1 else j = j + 1
+		);	
+	);
+	x = i + j;
+)

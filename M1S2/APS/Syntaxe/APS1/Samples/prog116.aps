@@ -1,0 +1,14 @@
+[
+  VAR x int;
+  PROC REC incr [n:int]
+    [
+      IF (lt x 42)
+        [
+	  SET x (add x n);
+	  CALL incr n
+	]
+	[ ECHO x ]
+    ];
+  SET x 21;
+  CALL incr 1
+]

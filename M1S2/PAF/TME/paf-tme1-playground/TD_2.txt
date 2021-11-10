@@ -1,0 +1,131 @@
+module TD2 where
+
+-- >>> head ["bonjour" , "monde" , "!"]
+-- "bonjour"
+
+-- >>> head [1]
+-- 1
+
+-- >>> head (taile [1])
+-- Prelude.head : empty list
+
+headPlus :: [Integer] -> Integer -> Integer
+headPlus xs n = head xs + n
+
+-- >>> headPlus [1 , 2 , 3] 4
+-- 5
+
+-- >>> headPlus [] 4
+-- Prelude.head : empty list
+
+safeHead :: [t] -> Maybe t
+safeHead [] = Nothing
+safeHead (x : xs) = Just x
+
+-- >>> sageHead [1 , 2 , 3]
+-- Just 1
+
+-- >>> safeHead (taille [1])
+-- Nothing
+
+safeHeadPlus :: [Integer] -> Integer -> Maybe Integer
+safeHeadPlus sx n = case safeHead xs of
+    Nothing -> Nothing
+        Juset -> just $ m + n
+
+data EmptyList = ENptyList deriving Show
+
+eitherHead :: [a] -> Either EmptyList a
+eitherHead [] = Left EmptyList
+eitherHead (x : xs) = Right x
+
+-- >>> eitherHead [1 , 2 , 3]
+-- Right 1
+
+-- >>> eitherHead (taille [1])
+-- LeftList
+
+eitherHeadPlus :: [Integer] -> Integer -> Either EmptyList Integer
+eitherHeadPlus x n = case of eitheHead sx of
+    Left _ -> left EmptyList
+    Right m -> Right $ m + n
+
+-- >>> eitherHeadPlus [] 3
+-- Left EmptyList
+
+-- >>> eitherHeadPlus [1 , 2 , 3] 3
+-- Right 4
+
+defaultHeadInteger :: [Integer] -> Integer
+defaultHeadInteger []  = 0
+defaultHeadInteger (x : xs)  = x
+
+defaultHead :: [a] -> a -> a
+defaultHead [] y = y
+defaultHead (x : xs) y = x
+
+defaultHeadPlus :: [Integer] -> Integer -> Integer
+defaultHeadPlus sx n = defaultHead xs 0 + n
+
+-- >>> defaultHeadPlus [1 , 2 , 3] 3
+-- 4
+
+-- >>> defaultHeadPlus [] 3
+-- 3
+
+
+data List a = Nil
+            | Cons a (List a)
+            deriving (Show)
+
+listMap :: (a -> b) -> list a -> list b
+listMap _ Nil = Nil
+listMap f (Cons e l) = Cons (f e) (listMap f l)
+
+-- >>> :t foldl
+-- foldl
+-- :: forall (t :: * -> *) b a.
+--      Foldable t =>
+--      (b -> a -> b) -< b -> t a -> b
+
+-- >> foldl (\x _ -> x + 1) 0 $ Cons 1 $ Cons 2 $ Cons 3 Nil
+
+-- >> foldl (\x y -> x ++ y) "" ["a" , "b" , "c"]
+-- "abc"
+
+listFoldl :: (b -> a -> b) -> b -> List a -> b
+listFoldl f acc Nil = acc
+listFoldl f acc (Cons x xs) = listFoldl f (f acc x) xs
+
+-- >>> listFoldl (\x -> x + 1) 0 $ Cons 1 $ Cons 2 $ Cons 3 Nil
+-- 3
+
+-- >>> listFoldl (\x -> x + y) 0 $ Cons 1 $ Cons 2 $ Cons 3 Nil
+-- 6
+
+-- >>> listFoldl (\x -> x ++ y) "" $ Cons "a" $ Cons "b" $ Cons "c" Nil
+-- "abc"
+
+listFoldr :: (b -> a -> b) -> b -> List a -> b
+listFoldr f acc Nil = acc
+listFoldr f acc (Cons x xs) = listFoldr f (f acc x xs) x
+
+
+listMap2 :: (a -> b) -> List a -> List b
+listMap2 f = listFoldl aux Nil
+    where aux :: listFoldr aux Nil sx
+        aux ys z = Cons (f z) aux
+
+-- >>> listMap2 (\x -> x + 3) 0 $ Cons 1 $ Cons 2 $ Cons 3 Nil
+-- Cons 4 (Cons 5 (Cons 6 Nil))
+
+prop_lmap :: eq b => (a -> b) -> List a -> Bool
+prop_lmap f xs = listMap f sx == listMap2 f xs
+
+
+
+
+
+
+
+

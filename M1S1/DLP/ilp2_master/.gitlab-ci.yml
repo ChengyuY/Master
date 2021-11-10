@@ -1,0 +1,61 @@
+image: dlp
+
+stages:
+- cours
+- tme
+
+
+ILP1:
+  stage: cours
+  script: >
+    /home/dlp/run.sh -id ILP1 -name ILP1
+    com.paracamplus.ilp1.tools.test.FileToolTest
+    com.paracamplus.ilp1.interpreter.test.InterpreterTest
+    com.paracamplus.ilp1.compiler.test.CompilerTest
+  artifacts:
+    reports:
+      junit: report.xml
+
+ILP2:
+  stage: cours
+  script: >
+    /home/dlp/run.sh -id ILP2 -name ILP2
+    com.paracamplus.ilp2.interpreter.test.InterpreterTest
+    com.paracamplus.ilp2.compiler.test.CompilerTest
+  artifacts:
+    reports:
+      junit: report.xml
+image: dlp
+
+ILP2:
+  stage: tme
+  script: >
+    /home/dlp/run.sh -id tme4 -name tme4
+    com.paracamplus.ilp2.ilp2tme4.interpreter.test.InterpreterTest
+  artifacts:
+    reports:
+      junit: report.xml
+image: dlp
+
+ILP2:
+  stage: tme
+  script: >
+    /home/dlp/run.sh -id tme5 -name tme5
+    com.paracamplus.ilp2.ilp2tme5.interpreter.test.InterpreterTest
+    com.paracamplus.ilp2.ilp2tme5.compiler.test.CompilerTest
+    com.paracamplus.ilp2.ilp2tme5n.interpreter.test.InterpreterTest
+  artifacts:
+    reports:
+      junit: report.xml
+image: dlp
+
+ILP2:
+  stage: tme
+  script: >
+    /home/dlp/run.sh -id tme5 -name tme5
+    com.paracamplus.ilp2.ilp2tme6.interpreter.test.InterpreterTest
+    com.paracamplus.ilp2.ilp2tme6.compiler.test.CompilerTest
+  artifacts:
+    reports:
+      junit: report.xml
+image: dlp

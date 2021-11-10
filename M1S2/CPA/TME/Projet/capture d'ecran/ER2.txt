@@ -1,0 +1,134 @@
+    private ArrayList<Edge> kruskal(ArrayList<Point> points){
+        ArrayList<Edge> edges = new ArrayList<Edge>();
+        for (Point p: points) {
+            for (Point q: points) {
+                if (p.equals(q) || contains(edges,p,q)) continue;
+                edges.add(new Edge(p,q));
+            }
+        }
+        edges = sort(edges);
+        ArrayList<Edge> kruskal = new ArrayList<Edge>();
+        Edge current;
+        NameTag forest = new NameTag(points);
+        while (edges.size()!=0) {
+            current = edges.remove(0);
+            if (forest.tag(current.p)!=forest.tag(current.q)) {
+                kruskal.add(current);
+                forest.reTag(forest.tag(current.p),forest.tag(current.q));
+            }
+        }
+        return kruskal;
+    }
+
+    public static int[][] calculShortestPaths(ArrayList<Point> points, int edgeThreshold) {
+        int[][] paths = new int[points.size()][points.size()];
+        for (int i = 0; i < paths.length; i++)
+            for (int j = 0; j < paths.length; j++)
+                paths[i][j] = i;
+        double[][] dist = new double[points.size()][points.size()];
+        for (int i = 0; i < paths.length; i++) {
+            for (int j = 0; j < paths.length; j++) {
+                if (i == j) {
+                    dist[i][j] = 0;
+                    continue;
+                }
+                if (points.get(i).distance(points.get(j)) <= edgeThreshold)
+                    dist[i][j] = points.get(i).distance(points.get(j));
+                else dist[i][j] = Double.POSITIVE_INFINITY;
+                paths[i][j] = j;
+            }
+        }
+        for (int k = 0; k < paths.length; k++) {
+            for (int i = 0; i < paths.length; i++) {
+                for (int j = 0; j < paths.length; j++) {
+                    if (dist[i][j] > dist[i][k] + dist[k][j]) {
+                        dist[i][j] = dist[i][k] + dist[k][j];
+                        paths[i][j] = paths[i][k];
+                    }
+                }
+            }
+        }
+        return paths;
+    }
+
+    public  ArrayList<Integer> getPointsOnPaths(int depart, int arrive, int[][] paths){
+        ArrayList<Integer> path = new ArrayList<>();
+        int i = depart , j = arrive;
+        path.add(i);
+        int pos;
+        while (true){
+            pos = paths[i][j];
+            if (pos != j){
+                i = pos;
+                path.add(pos);
+            }else{
+                break;
+            }
+        }
+        path.add(j);
+        return path;
+    }
+
+    private ArrayList<Edge> heuristique_v1(ArrayList<Point> points, ArrayList<Point> hitPoints, int[][] paths){
+        ArrayList<Edge> edges = kruskal(hitPoints);
+        ArrayList<Point> pointOnPaths = new ArrayList<>();
+        for (Edge e : edges){
+            int i = points.indexOf(e.getP());
+            int j = points.indexOf(e.getQ());
+            // find every point on the shortest path
+            ArrayList<Integer> pointEntreij = getPointsOnPaths(i,j,paths);
+            for (Integer k : pointEntreij){
+                pointOnPaths.add(points.get(k));
+            }
+        }
+        edges = kruskal(pointOnPaths);
+        return edges;
+    }
+
+    private ArrayList<Edge> filtre(ArrayList<Edge> edges, Point root, double maxBudget) {
+        ArrayList<Edge> res = new ArrayList<Edge>();
+        ArrayList<Edge> rest = new ArrayList<Edge>();
+        ArrayList<Point> successor = new ArrayList<Point>();
+        Edge current;
+        double budget = 0;
+        while (edges.size() != 0) {
+            current = edges.remove(0);
+            if (current.p.equals(root)) {
+                if(budget + current.distance() < maxBudget) {
+                    successor.add(current.q);
+                    if(!res.contains(current)) {
+                        res.add(current);
+                    }
+                    budget = budget + current.distance();
+                }
+            } else {
+                if (current.q.equals(root)) {
+                    if(budget + current.distance() < maxBudget) {
+                        successor.add(current.p);
+                        if(!res.contains(current)) {
+                            res.add(current);
+                        }
+                        budget = budget + current.distance();
+                    }
+                } else {
+                    rest.add(current);
+                }
+            }
+        }
+        ArrayList<Edge> subres = new ArrayList<Edge>();
+        for (Point suc : successor) {
+            ArrayList<Edge> subEdges= filtre((ArrayList<Edge>) rest.clone(), suc, maxBudget - budget);
+            for(Edge e : subEdges) {
+                subres.add(e);
+            }
+        }
+        for(Edge e : subres) {
+            if(budget + e.distance() < maxBudget) {
+                res.add(e);
+                budget = budget + e.distance();
+            }else {
+                break;
+            }
+        }
+        return res;
+    }

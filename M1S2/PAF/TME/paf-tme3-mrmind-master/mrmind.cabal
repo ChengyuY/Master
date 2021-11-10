@@ -1,0 +1,77 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: a8950f1fc19fb4244a6e5ae9676d099f6d6cb0c2e98965ea3629a3300a456c2d
+
+name:           mrmind
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/mrmind#readme>
+homepage:       https://github.com/mrmind#readme
+bug-reports:    https://github.com/mrmind/issues
+author:         Frederic Peshanski
+maintainer:     frederic.peschanski@lip6.fr
+copyright:      2019 F. Peschanski
+license:        AllRightsReserved
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/mrmind
+
+library
+  exposed-modules:
+      MindEngine
+  other-modules:
+      Paths_mrmind
+  hs-source-dirs:
+      src
+  default-extensions: OverloadedStrings UnicodeSyntax MultiWayIf LambdaCase DuplicateRecordFields MonadComprehensions InstanceSigs
+  build-depends:
+      base >=4.7 && <5
+    , containers
+    , hspec
+    , random
+    , text
+  default-language: Haskell2010
+
+executable mrmind-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_mrmind
+  hs-source-dirs:
+      app
+  default-extensions: OverloadedStrings UnicodeSyntax MultiWayIf LambdaCase DuplicateRecordFields MonadComprehensions InstanceSigs
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , containers
+    , hspec
+    , mrmind
+    , random
+    , text
+  default-language: Haskell2010
+
+test-suite mrmind-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      MindEngineSpec
+      Paths_mrmind
+  hs-source-dirs:
+      test
+  default-extensions: OverloadedStrings UnicodeSyntax MultiWayIf LambdaCase DuplicateRecordFields MonadComprehensions InstanceSigs
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , containers
+    , hspec
+    , mrmind
+    , random
+    , text
+  default-language: Haskell2010
