@@ -1,4 +1,4 @@
-Here are my excercise and projects during my first year of master.
+Here are my excercises and projects during my first year of master.
 
 ### Main works
 - M1S2/APS/Syntaxe
